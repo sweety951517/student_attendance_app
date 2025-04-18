@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Student Dashboard</title>
+</head>
+<body>
+<h2>Welcome {{ name }}</h2>
+ 
+    <h3>Your Attendance Records</h3>
+<ul>
+      {% for record in data %}
+<li>{{ record.date }} - {{ record.status }}</li>
+      {% endfor %}
+</ul>
+</body>
+</html>
