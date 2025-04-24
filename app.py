@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session,flash
+
 
 from models import db, User, Attendance
 
@@ -76,31 +77,28 @@ def login():
  
     return render_template('login.html')
  
-@app.route('/teacher_dashboard', methods=['GET', 'POST'])
 
+@app.route('/teacher', methods=['GET', 'POST'])
 def teacher_dashboard():
-
-    if session.get('role') != 'teacher':
-
-        return redirect(url_for('login'))
- 
     if request.method == 'POST':
-
-        student = request.form['student']
-
+        student_name = request.form['student']
         date = request.form['date']
-
         status = request.form['status']
 
-        record = Attendance(student_name=student, date=date, status=status)
+        # 🔍 Check if attendance already exists for that student + date
+        existing = Attendance.query.filter_by(student_name=student_name, date=date).first()
 
-        db.session.add(record)
+        if existing:
+            flash("Attendance already marked for this student on this date!", "warning")
+        else:
+            # Save new attendance
+            record = Attendance(student_name=student_name, date=date, status=status)
+            db.session.add(record)
+            db.session.commit()
+            flash("Attendance submitted successfully!", "success")
 
-        db.session.commit()
- 
-    attendance_records = Attendance.query.all()
-
-    return render_template('teacher_dashboard.html', data=attendance_records)
+    data = Attendance.query.all()
+    return render_template('teacher_dashboard.html', data=data)
  
 @app.route('/student_dashboard')
 
