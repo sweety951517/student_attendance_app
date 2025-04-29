@@ -1,77 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Teacher Dashboard</title>
-  <div class="text-end mb-3">
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
-      </div>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Teacher Dashboard | Student Attendance App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8f9fa, #e0f7fa);
+            min-height: 100vh;
+            padding-top: 2rem;
+        }
+        .card {
+            margin-bottom: 2rem;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container py-5">
-  <h2 class="mb-4 text-center">👩‍🏫 Teacher Dashboard</h2>
+<div class="container">
 
-  <form method="POST" class="card p-4 shadow-sm mb-5">
-    <div class="row g-3">
-      <div class="col-md-4">
-        <input type="text" class="form-control" name="student" placeholder="Student Name" required>
-      </div>
-      <div class="col-md-4">
-        <input type="date" class="form-control" name="date" required>
-      </div>
-      <div class="col-md-4">
-        <select name="status" class="form-select" required>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
-        </select>
-      </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👩‍🏫 Teacher Dashboard</h2>
+        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
     </div>
-    <button type="submit" class="btn btn-success w-100 mt-4">Mark Attendance ✅</button>
-  </form>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Attendance Form -->
+    <div class="card shadow">
+        <div class="card-body">
+            <h5 class="card-title">📝 Mark Attendance</h5>
+            <form method="POST">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="student" placeholder="Student Name" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" class="form-control" name="date" required>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="status" required>
+                            <option selected disabled>Status</option>
+                            <option value="Present">Present</option>
+                            <option value="Absent">Absent</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button type="submit" class="btn btn-success">Mark</button>
+                    </div>
+                </div>
+            </form>
         </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <h5 class="card-title mb-3">📋 Attendance Records</h5>
-      <div class="table-responsive">
-        <table class="table table-striped table-hover">
-          <thead>
-            <tr>
-              <th>Student</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in data %}
-              <tr>
-                <td>{{ row.student_name }}</td>
-                <td>{{ row.date }}</td>
-                <td>{{ row.status }}</td>
-                <td>
-                  <a href="{{ url_for('edit_attendance', id=row.id) }}" class="btn btn-sm btn-primary">Edit</a>
-                  <a href="{{ url_for('delete_attendance', id=row.id) }}" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
     </div>
-  </div>
+
+    <!-- Grouped Attendance Display -->
+    {% for date, records in grouped_data.items() %}
+    <div class="card shadow">
+        <div class="card-body">
+            <h5 class="card-title">📅 Date: {{ date }}</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ record.student_name }}</td>
+                            <td>{{ record.status }}</td>
+                            <td>
+                                <a href="{{ url_for('edit_attendance', id=record.id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                <a href="{{ url_for('delete_attendance', id=record.id) }}" class="btn btn-sm btn-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 
 </div>
 

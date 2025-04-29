@@ -78,8 +78,16 @@ def teacher_dashboard():
             db.session.commit()
             flash("✅ Attendance submitted successfully!", "success")
 
-    data = Attendance.query.all()
-    return render_template('teacher_dashboard.html', data=data)
+    # 🔥 Fetch all attendance and group by date
+    all_attendance = Attendance.query.order_by(Attendance.date.desc()).all()
+
+    grouped_data = {}
+    for record in all_attendance:
+        if record.date not in grouped_data:
+            grouped_data[record.date] = []
+        grouped_data[record.date].append(record)
+
+    return render_template('teacher_dashboard.html', grouped_data=grouped_data)
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_attendance(id):
