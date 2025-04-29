@@ -113,5 +113,5 @@ def student_dashboard():
     return render_template('student_dashboard.html', name=name, data=student_data)
 
 # Corrected this part too:
-if __name__ == '_main_':
+if __name__ == '__main__':
     app.run(debug=True)
