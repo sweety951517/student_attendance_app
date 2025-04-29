@@ -2,29 +2,27 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from models import db, User, Attendance
 import urllib.parse
 
-app = Flask(__name__)  
+app = Flask(__name__)
 
 app.secret_key = 'super_secret_key'
 
-# Replace with your actual values:
+# Database connection settings
 DB_USERNAME = "admin.user"
 DB_PASSWORD = "Sushma@951517"
 DB_SERVER = "student-attendance-server.database.windows.net"
 DB_NAME = "student_attendance"
 
-# URL encode the password
 DB_PASSWORD = urllib.parse.quote_plus(DB_PASSWORD)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mssql+pyodbc://{DB_USERNAME}:{DB_PASSWORD}@{DB_SERVER}:1433/{DB_NAME}?driver=ODBC+Driver+18+for+SQL+Server"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize DB
 db.init_app(app)
 
 with app.app_context():
     db.create_all()
 
-# ----------------- ROUTES ------------------
+# ------------------- ROUTES -------------------
 
 @app.route('/')
 def index():
@@ -33,16 +31,24 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        role = request.form['role']
-        name = request.form['name']
+        email = request.form['email']
+
+        # Smart role detection based on email domain
+        if email.endswith('@teacher.edu'):
+            role = 'teacher'
+        elif email.endswith('@student.edu'):
+            role = 'student'
+        else:
+            flash("❌ Invalid email domain. Please use @teacher.edu or @student.edu", "danger")
+            return redirect(url_for('login'))
 
         session['role'] = role
-        session['name'] = name
+        session['name'] = email.split('@')[0]  # Save only the name part
 
         # Check if user exists, if not, add to DB
-        user = User.query.filter_by(name=name).first()
+        user = User.query.filter_by(name=session['name']).first()
         if not user:
-            new_user = User(name=name, role=role)
+            new_user = User(name=session['name'], role=role)
             db.session.add(new_user)
             db.session.commit()
 
@@ -111,7 +117,10 @@ def student_dashboard():
     name = session.get('name')
     student_data = Attendance.query.filter_by(student_name=name).all()
     return render_template('student_dashboard.html', name=name, data=student_data)
-
-# Corrected this part too:
+@app.route('/logout')
+def logout():
+    session.clear()
+    #flash('👋 You have been logged out successfully!', 'info')
+    return redirect(url_for('index'))
 if __name__ == '__main__':
     app.run(debug=True)
